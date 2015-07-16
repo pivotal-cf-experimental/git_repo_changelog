@@ -10,7 +10,7 @@ Usage:
 bundle exec rake changelog[repository_path,start_git_ref,end_git_ref,authors]
 ```
 
-WARNING: Running this will run git checkouts in the passed in repo_path.
+WARNING: Running this will run git checkouts in the passed in repository_path.
 
 Example:
 
