@@ -1,8 +1,12 @@
 require 'git_repo_changelog/git_repo'
 
 describe GitRepoChangelog::GitRepo do
+  let(:repo_path) do
+    ENV.fetch('CF_RELEASE_PATH', '/Users/pivotal/workspace/cf-release-temp')
+  end
+
   subject(:git_repo) do
-    GitRepoChangelog::GitRepo.new('/Users/pivotal/workspace/cf-release')
+    GitRepoChangelog::GitRepo.new(repo_path)
   end
 
   describe '#release_stories' do
@@ -10,7 +14,7 @@ describe GitRepoChangelog::GitRepo do
       expect(git_repo.release_stories(
         'v211', 'v212',
         %w(mboedicker@pivotal.io cpiraino@pivotal.io)).to_hash).to eq(
-          'cf-release' => ['96503820'],
+          File.basename(repo_path) => ['96503820'],
           'src/routing-api' => %w(85546998 91732170),
           'src/acceptance-tests' => ['95212618']
         )
