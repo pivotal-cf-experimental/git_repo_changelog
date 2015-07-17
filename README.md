@@ -16,15 +16,15 @@ Example:
 
 ```
 bundle
+export TRACKER_API_TOKEN=<your Pivotal Tracker API token>
 bundle exec rake changelog[/Users/pivotal/workspace/cf-release,v211,v212,'mboedicker@pivotal.io cpiraino@pivotal.io']
 cf-release
-96503820
+- cloudfoundry/gorouter #88: Added cache headers to heartbeat response [details](https://www.pivotaltracker.com/story/show/96503820)
 
 src/routing-api
-85546998
-91732170
+- operator should be able to discover metrics for the routing api service [details](https://www.pivotaltracker.com/story/show/85546998)
+- Check performance of 200 services heartbeating their routes [details](https://www.pivotaltracker.com/story/show/91732170)
 
 src/acceptance-tests
-95212618
-
+- CATS broker should return AsyncRequired error for async plans when request does not include accepts_incomplete [details](https://www.pivotaltracker.com/story/show/95212618)
 ```
