@@ -1,4 +1,4 @@
-Generate a changelog of Pivotal Tracker story titles and URLs for a range of git commits and authors. Git submodules will be traversed.
+Generates a changelog of Pivotal Tracker story titles and URLs for a range of git commits and authors. Git submodules will be traversed.
 
 Story ids must be contained in commit messages in the form `[#123456]`.
 
