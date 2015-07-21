@@ -1,12 +1,14 @@
-Generate a changelog of Pivotal Tracker story ids for a range of git commits and authors.
+Generate a changelog of Pivotal Tracker story titles and URLs for a range of git commits and authors. Git submodules will be traversed.
 
-Git submodules will be traversed.
-
-Story ids are contained in commit messages in the form `[#123456]`.
+Story ids must be contained in commit messages in the form `[#123456]`.
 
 Usage:
 
 ```
+git clone <this repo>
+cd git_repo_changelog
+bundle
+export TRACKER_API_TOKEN=<your Pivotal Tracker API token>
 bundle exec rake changelog[repository_path,start_git_ref,end_git_ref,authors]
 ```
 
@@ -16,7 +18,7 @@ Example:
 
 ```
 bundle
-export TRACKER_API_TOKEN=<your Pivotal Tracker API token>
+export TRACKER_API_TOKEN=12345670
 bundle exec rake changelog[/Users/pivotal/workspace/cf-release,v211,v212,'mboedicker@pivotal.io cpiraino@pivotal.io']
 cf-release
 - cloudfoundry/gorouter #88: Added cache headers to heartbeat response [details](https://www.pivotaltracker.com/story/show/96503820)
