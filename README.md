@@ -12,9 +12,9 @@ export TRACKER_API_TOKEN=<your Pivotal Tracker API token>
 bundle exec rake changelog[repository_path,start_git_ref,end_git_ref,authors]
 ```
 
-`repository_path` - local path to repo you'd like the changelog for
-`start_git_ref`, `end_git_ref` - can be tags, shas, branches, etc
-`authors` - a space delimited list of email addresses
+- `repository_path` - local path to repo you'd like the changelog for
+- `start_git_ref`, `end_git_ref` - can be tags, shas, branches, etc
+- `authors` - a space delimited list of email addresses
 
 WARNING: Running this will run git checkouts in the passed in repository_path.
 
