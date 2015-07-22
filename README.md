@@ -5,11 +5,11 @@ Story ids must be contained in commit messages in the form `[#123456]`.
 Usage:
 
 ```
-git clone <this repo>
-cd git_repo_changelog
-bundle
-export TRACKER_API_TOKEN=<your Pivotal Tracker API token>
-bundle exec rake changelog[repository_path,start_git_ref,end_git_ref,authors]
+$ git clone <this repo>
+$ cd git_repo_changelog
+$ bundle
+$ export TRACKER_API_TOKEN=<your Pivotal Tracker API token>
+$ bundle exec rake changelog[repository_path,start_git_ref,end_git_ref,authors]
 ```
 
 - `repository_path` - local path to repo you'd like the changelog for
@@ -21,9 +21,9 @@ WARNING: Running this will run git checkouts in the passed in repository_path.
 Example:
 
 ```
-bundle
-export TRACKER_API_TOKEN=12345670
-bundle exec rake changelog[/Users/pivotal/workspace/cf-release,v211,v212,'mboedicker@pivotal.io cpiraino@pivotal.io']
+$ bundle
+$ export TRACKER_API_TOKEN=12345670
+$ bundle exec rake changelog[/Users/pivotal/workspace/cf-release,v211,v212,'mboedicker@pivotal.io cpiraino@pivotal.io']
 cf-release
 - cloudfoundry/gorouter #88: Added cache headers to heartbeat response [details](https://www.pivotaltracker.com/story/show/96503820)
 
