@@ -14,16 +14,16 @@ $ bundle exec rake changelog[repository_path,start_git_ref,end_git_ref,authors]
 
 - `repository_path` - local path to repo you'd like the changelog for
 - `start_git_ref`, `end_git_ref` - can be tags, shas, branches, etc
-- `authors` - a space delimited list of email addresses
+- `authors` - a space delimited list of email addresses or empty string for all authors
 
-WARNING: Running this will run git checkouts in the passed in repository_path.
+**WARNING:** Running this will run git checkouts in the passed in repository_path.
 
 Example:
 
 ```
 $ bundle
 $ export TRACKER_API_TOKEN=12345670
-$ bundle exec rake changelog[/Users/pivotal/workspace/cf-release,v211,v212,'mboedicker@pivotal.io cpiraino@pivotal.io']
+$ bundle exec rake changelog[/temp/workspace/cf-release,v211,v212,'mboedicker@pivotal.io cpiraino@pivotal.io']
 cf-release
 - cloudfoundry/gorouter #88: Added cache headers to heartbeat response [details](https://www.pivotaltracker.com/story/show/96503820)
 
