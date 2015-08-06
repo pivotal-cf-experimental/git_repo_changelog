@@ -34,3 +34,7 @@ src/routing-api
 src/acceptance-tests
 - CATS broker should return AsyncRequired error for async plans when request does not include accepts_incomplete [details](https://www.pivotaltracker.com/story/show/95212618)
 ```
+
+### Running Tests
+
+Currently the tests need a cf-release repository located at `/Users/pivotal/workspace/cf-release-git-repo` in order to run correctly.

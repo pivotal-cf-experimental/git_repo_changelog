@@ -2,7 +2,7 @@ require 'git_repo_changelog/git_repo'
 
 describe GitRepoChangelog::GitRepo do
   let(:repo_path) do
-    ENV.fetch('CF_RELEASE_PATH', '/Users/pivotal/workspace/cf-release-temp')
+    ENV.fetch('CF_RELEASE_PATH', '/Users/pivotal/workspace/cf-release-git-repo')
   end
 
   subject(:git_repo) do

@@ -29,5 +29,32 @@ src/acceptance-tests
 
       EOS
     end
+
+    context 'when the client receives an error contacting Tracker' do
+      it 'outputs an error message for the associated story id' do
+        story_map = GitRepoChangelog::StoryMap.new
+        story_map.add('src/routing-api', ['85546998'])
+        story_map.add('src/acceptance-tests', ['95212618'])
+
+        tracker_client = instance_double(TrackerApi::Client)
+        story1 = instance_double(
+          TrackerApi::Resources::Story,
+          name: 'story 1 name', url: 'story 1 url')
+        allow(tracker_client).to receive(:story).with('85546998')
+          .and_return(story1)
+        allow(tracker_client).to receive(:story).with('95212618')
+          .and_raise(StandardError.new('Boom'))
+        formatter = GitRepoChangelog::TrackerFormatter.new(tracker_client)
+        formatted = formatter.format(story_map)
+        expect(formatted).to eq <<-EOS
+src/routing-api
+- story 1 name [details](story 1 url)
+
+src/acceptance-tests
+- 95212618 failed to fetch story title (error: Boom)
+
+      EOS
+      end
+    end
   end
 end
