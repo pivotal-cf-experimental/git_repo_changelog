@@ -38,3 +38,4 @@ src/acceptance-tests
 ### Running Tests
 
 Currently the tests need a cf-release repository located at `/Users/pivotal/workspace/cf-release-git-repo` in order to run correctly.
+This can be overridden by setting the `CF_RELEASE_PATH` environment variables.
