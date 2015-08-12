@@ -39,18 +39,19 @@ module GitRepoChangelog
         output.scan(%r{
         \+\+\+\ b\/([^\n]+)\n
 @@\ -1\ \+1\ @@\n
--Subproject\ commit\ [a-f0-9]{40}\n
-\+Subproject\ commit\ [a-f0-9]{40}
-}mx).flatten
+-Subproject\ commit\ ([a-f0-9]{40})\n
+\+Subproject\ commit\ ([a-f0-9]{40})
+}mx)
       end
     end
 
-    def submodule_commit_message(root_sha, path)
+    def submodule_commit_messages(root_sha, path, submodule_prev_sha,
+                                  submodule_new_sha)
       Dir.chdir(@root_path) do
         `git checkout #{root_sha}`
         `git submodule update --init --recursive`
         Dir.chdir(path) do
-          `git log --format=%B -n 1`
+          `git log #{submodule_prev_sha}..#{submodule_new_sha}`
         end
       end
     end
@@ -68,10 +69,10 @@ module GitRepoChangelog
       story_id_extractor = GitRepoChangelog::StoryIdExtractor.new
 
       submodule_commits = commit_submodules_changed(root_sha)
-      submodule_commits.each do |submodule_path|
-        message = submodule_commit_message(root_sha, submodule_path)
+      submodule_commits.each do |path, prev_sha, new_sha|
+        message = submodule_commit_messages(root_sha, path, prev_sha, new_sha)
         story_ids = story_id_extractor.story_ids(message)
-        story_map.add(submodule_path, story_ids)
+        story_map.add(path, story_ids)
       end
 
       story_map
