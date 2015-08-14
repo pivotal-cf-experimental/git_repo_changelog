@@ -15,8 +15,7 @@ describe GitRepoChangelog::GitRepo do
         'v211', 'v212',
         %w(mboedicker@pivotal.io cpiraino@pivotal.io)).to_hash).to eq(
           File.basename(repo_path) => ['96503820'],
-          'src/routing-api' => %w(85546998 85546998 85546998 85546998 91732170),
-          'src/acceptance-tests' => %w(95212618 95212618)
+          'src/routing-api' => %w(85546998 91732170)
         )
     end
 
@@ -25,16 +24,23 @@ describe GitRepoChangelog::GitRepo do
         expect(git_repo.release_stories(
           'v211', 'v212',
           %w(mboedicker@pivotal.io)).to_hash).to eq(
-            'src/routing-api' => %w(85546998 85546998 85546998 85546998),
-            'src/acceptance-tests' => %w(95212618 95212618)
+            'src/routing-api' => %w(85546998)
           )
+      end
+    end
+
+    context 'when the bump is reverted' do
+      it 'the stories in that bump are not included in the result' do
+        stories = git_repo.release_stories('v211', 'v212', []).to_hash
+        expect(stories).not_to have_key('src/loggregator')
+        expect(stories).to have_key('src/routing-api')
       end
     end
   end
 
   describe '#commits' do
     it 'lists all commits between two refs filtered by authors' do
-      expect(git_repo.commits(
+      expect(git_repo.commits(repo_path,
                'v211', 'v212',
                %w(mboedicker@pivotal.io cpiraino@pivotal.io))).to eq(%w(
                  b381dee02fb5d8f3ea768bf1676a564710caf812
@@ -45,86 +51,81 @@ describe GitRepoChangelog::GitRepo do
     end
   end
 
-  describe '#commit_submodules_changed' do
-    it 'returns the submodules changed in a submodule bump commit' do
-      expect(git_repo.commit_submodules_changed(
-               '0a111f6933fe9e34777315c78e66e0e1c07ac5ad')).to eq(
-                 [['src/cloud_controller_ng',
-                   'd29558702808d8a7b1a3ce8535e28183f8ae884a',
-                   '11b2eafcae22331b696efec72188d6da4ad21ca1'],
-                  ['src/gorouter/src/github.com/cloudfoundry/gorouter',
-                   '261822090071849721ea7b6cf4b1350db7991ad2',
-                   '914b560f449a6235d6e994048e0dc9c03359bdb6'],
-                  ['src/gorouter/src/github.com/cloudfoundry/yagnats',
-                   'b7f4da8b87424c2e24c32e6f0f1048b2571d8fe1',
-                   '719fb61b685b33a68925ccc827994029ed05a5e6']
-                 ])
+  describe '#submodule_commit_sha' do
+    context 'when the submodule_shas is empty' do
+      it 'returns the submodules shas at the the specified version' do
+        submodule_shas = {}
+        Dir.chdir(repo_path) do
+          git_repo.submodule_commit_sha('v211', submodule_shas)
+        end
+        expect(submodule_shas).to eq({"shared"=>["87112bae91127792ffbed7fc6c76ac7088708ace"],
+                                      "src/acceptance-tests"=>["41d21c0224e43ced801fd65c11904beb747919db"],
+                                      "src/cloud_controller_ng"=>["5fecc24082167a8d399cd0adac8c5a9dacd9e69b"],
+                                      "src/collector"=>["d0f920e3569bb63e4b902e01a5507920b5725515"],
+                                      "src/dea_next"=>["4b1a50ae5598b0c70cb3e5895ed800e0cff37722"],
+                                      "src/etcd-metrics-server"=>["90c444c7f93cacb998e45c46f1e06ecf4c8eb9c4"],
+                                      "src/etcd-release"=>["da768cfb5c31f6da7fbd48b221ace62702a6dbb2"],
+                                      "src/gnatsd"=>["7fb53586108b89a68d3db9ad2f7cf84a6842194c"],
+                                      "src/gorouter"=>["a3edc3a752c09bea3c10e9600c530254b058b81d"],
+                                      "src/hm9000"=>["7eefc31903ac6520292b29584818420b2b231374"],
+                                      "src/loggregator"=>["d648809112be62df9663ac82a7bd39babc47fa28"],
+                                      "src/login"=>["c4e3209c91882edae6185da5794d8a4dea02c73d"],
+                                      "src/routing-api"=>["60e1b8817246df8ec0aee06f1df854ad160a800f"],
+                                      "src/smoke-tests"=>["29a5311a7f98e85f6a907cec09e6caa3cdb05526"],
+                                      "src/statsd-injector"=>["f70771222f6ccfff3af6f5319f02e5543ce7f569"],
+                                      "src/uaa"=>["a32678a82805c9c8296a821129f2bf974ca65e2e"],
+                                      "src/warden"=>["015a27337bbd10c3050f50810f5b310a0c6f8315"]})
+      end
     end
-  end
 
-  describe '#submodule_commit_message' do
-    it 'returns the commit message of a commit in a submodule' do
-      expect(git_repo.submodule_commit_messages(
-               '5b7b3fa12c899566c986538d911281b97048886b',
-               'src/cloud_controller_ng',
-               '31234c4c8a12f4c60243f4b68461d515e6d1c8e8',
-               '0fc14205ce043c1f22a398c67ad080326f9ad115'
-      )).to eq("commit 0fc14205ce043c1f22a398c67ad080326f9ad115\n"\
-          "Author: Rohit Kumar and Zak Auerbach <rokumar@pivotal.io>\n"\
-          "Date:   Thu Jun 25 15:45:53 2015 -0700\n"\
-          "\n"\
-          "    Allow roles to be unset by username on space\n    "\
-          "\n    "\
-          "[#97777418]\n"\
-          "\n"\
-          "commit 875cdd8b8a881778fb9018f67dfd64cabad5c72e\n"\
-          "Author: Rohit Kumar and Zak Auerbach <zauerbach@pivotal.io>\n"\
-          "Date:   Thu Jun 25 15:25:11 2015 -0700\n"\
-          "\n"\
-          "    Allow roles to be unset by username\n"\
-          "    \n"\
-          "    [#97777418]\n"\
-          "\n"\
-          "commit 92e93fca2d9335123f759530f77125969a151c6c\n"\
-          "Author: Rohit Kumar and Zak Auerbach <rokumar@pivotal.io>\n"\
-          "Date:   Thu Jun 25 14:13:03 2015 -0700\n"\
-          "\n"\
-          "    Remove billing events configurations\n"\
-          "    \n    "\
-          "[#92455198]\n"\
-          "\n"\
-          "commit 5d5897b8eae0bff55e81170a7ad38ed6a18edad8\n"\
-          "Author: Rohit Kumar and Zak Auerbach <rokumar@pivotal.io>\n"\
-          "Date:   Thu Jun 25 12:27:32 2015 -0700\n"\
-          "\n    "\
-          "Remove service billing events and base billing event\n"\
-          "    \n    "\
-          "[#92455198]\n"\
-          "\n"\
-          "commit 3c84b9885dacc699301aa8c239105180e704b44e\n"\
-          "Author: Rohit Kumar and Zak Auerbach <rokumar@pivotal.io>\n"\
-          "Date:   Thu Jun 25 12:15:43 2015 -0700\n"\
-          "\n    "\
-          "Remove Organization Start Event\n    "\
-          "\n    "\
-          "[#92455198]\n"\
-          "\n"\
-          "commit 7cf51e3329647370efffcd315087e37776c3e178\n"\
-          "Author: Rohit Kumar and Zak Auerbach <zauerbach@pivotal.io>\n"\
-          "Date:   Thu Jun 25 11:56:47 2015 -0700\n"\
-          "\n    "\
-          "Remove App Start and Stop Events\n"\
-          "    \n    "\
-          "* do not drop the table\n"\
-          "    \n    "\
-          "[#92455198]\n")
+    context "when the submodule_shas already contains the former version's shas" do
+      it 'add the shas into the key-value pair which has the key of the submodule name' do
+        submodule_shas = {"shared"=>["87112bae91127792ffbed7fc6c76ac7088708ace"],
+                           "src/acceptance-tests"=>["41d21c0224e43ced801fd65c11904beb747919db"],
+                           "src/cloud_controller_ng"=>["5fecc24082167a8d399cd0adac8c5a9dacd9e69b"],
+                           "src/collector"=>["d0f920e3569bb63e4b902e01a5507920b5725515"],
+                           "src/dea_next"=>["4b1a50ae5598b0c70cb3e5895ed800e0cff37722"],
+                           "src/etcd-metrics-server"=>["90c444c7f93cacb998e45c46f1e06ecf4c8eb9c4"],
+                           "src/etcd-release"=>["da768cfb5c31f6da7fbd48b221ace62702a6dbb2"],
+                           "src/gnatsd"=>["7fb53586108b89a68d3db9ad2f7cf84a6842194c"],
+                           "src/gorouter"=>["a3edc3a752c09bea3c10e9600c530254b058b81d"],
+                           "src/hm9000"=>["7eefc31903ac6520292b29584818420b2b231374"],
+                           "src/loggregator"=>["d648809112be62df9663ac82a7bd39babc47fa28"],
+                           "src/login"=>["c4e3209c91882edae6185da5794d8a4dea02c73d"],
+                           "src/routing-api"=>["60e1b8817246df8ec0aee06f1df854ad160a800f"],
+                           "src/smoke-tests"=>["29a5311a7f98e85f6a907cec09e6caa3cdb05526"],
+                           "src/statsd-injector"=>["f70771222f6ccfff3af6f5319f02e5543ce7f569"],
+                           "src/uaa"=>["a32678a82805c9c8296a821129f2bf974ca65e2e"],
+                           "src/warden"=>["015a27337bbd10c3050f50810f5b310a0c6f8315"]}
+        Dir.chdir(repo_path) do
+          git_repo.submodule_commit_sha('v212', submodule_shas)
+        end
+        expect(submodule_shas).to eq({"shared"=>["87112bae91127792ffbed7fc6c76ac7088708ace", "87112bae91127792ffbed7fc6c76ac7088708ace"],
+                                      "src/acceptance-tests"=>["41d21c0224e43ced801fd65c11904beb747919db"],
+                                      "src/cloud_controller_ng"=>["5fecc24082167a8d399cd0adac8c5a9dacd9e69b", "8861a1efa717838645c45fe164ab62b2767952d5"],
+                                      "src/collector"=>["d0f920e3569bb63e4b902e01a5507920b5725515", "d0f920e3569bb63e4b902e01a5507920b5725515"],
+                                      "src/dea_next"=>["4b1a50ae5598b0c70cb3e5895ed800e0cff37722", "9db43f15e332ebc29eac99bbfdf5365db66d95f3"],
+                                      "src/etcd-metrics-server"=>["90c444c7f93cacb998e45c46f1e06ecf4c8eb9c4", "90c444c7f93cacb998e45c46f1e06ecf4c8eb9c4"],
+                                      "src/etcd-release"=>["da768cfb5c31f6da7fbd48b221ace62702a6dbb2", "da768cfb5c31f6da7fbd48b221ace62702a6dbb2"],
+                                      "src/github.com/cloudfoundry/cf-acceptance-tests"=>["cdced815f585ef4661b2182799d1d6a7119489b0"],
+                                      "src/gnatsd"=>["7fb53586108b89a68d3db9ad2f7cf84a6842194c", "7fb53586108b89a68d3db9ad2f7cf84a6842194c"],
+                                      "src/gorouter"=>["a3edc3a752c09bea3c10e9600c530254b058b81d", "66144d2b2bc499cd9670eb59eb828835a1d33d86"],
+                                      "src/hm9000"=>["7eefc31903ac6520292b29584818420b2b231374", "7eefc31903ac6520292b29584818420b2b231374"],
+                                      "src/loggregator"=>["d648809112be62df9663ac82a7bd39babc47fa28", "d648809112be62df9663ac82a7bd39babc47fa28"],
+                                      "src/login"=>["c4e3209c91882edae6185da5794d8a4dea02c73d", "c4e3209c91882edae6185da5794d8a4dea02c73d"],
+                                      "src/routing-api"=>["60e1b8817246df8ec0aee06f1df854ad160a800f", "9d71fe6513d0f50c540609bcd0407cdc6187ea48"],
+                                      "src/smoke-tests"=>["29a5311a7f98e85f6a907cec09e6caa3cdb05526", "29a5311a7f98e85f6a907cec09e6caa3cdb05526"],
+                                      "src/statsd-injector"=>["f70771222f6ccfff3af6f5319f02e5543ce7f569", "e7152f1b153d9f7a0acc0720378b862278af821b"],
+                                      "src/uaa"=>["a32678a82805c9c8296a821129f2bf974ca65e2e", "091c5e5961dd33c8c7ca5a15f4020e47d266a1c3"],
+                                      "src/warden"=>["015a27337bbd10c3050f50810f5b310a0c6f8315", "e8f31ee5e40df69199ca3d69b8d909397f5b5365"]})
+      end
     end
   end
 
   describe '#commit_message' do
     it 'gets the commit message for a sha' do
       expect(
-        git_repo.commit_message(
+        git_repo.commit_message(repo_path,
           '35833c603f78b2c6eb1d53053e8dedb89d58256c')).to eq(
             "Remove billing events configurations for CC\n\n[#92455198]\n\n")
     end

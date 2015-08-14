@@ -12,67 +12,77 @@ module GitRepoChangelog
     def release_stories(start_ref, end_ref, authors)
       story_map = GitRepoChangelog::StoryMap.new
 
-      root_shas = commits(start_ref, end_ref, authors)
+      root_shas = commits(@root_path, start_ref, end_ref, authors)
       story_id_extractor = GitRepoChangelog::StoryIdExtractor.new
       root_shas.each do |root_sha|
-        message = commit_message(root_sha)
+        message = commit_message(@root_path, root_sha)
         story_ids = story_id_extractor.story_ids(message)
         story_map.add(@name, story_ids)
-
-        story_map.merge(submodule_commit_stories(root_sha))
       end
+
+      # get the stories of the submodules.
+      story_map.merge(submodule_commit_stories(start_ref, end_ref, authors))
 
       story_map
     end
 
-    def commits(start_ref, end_ref, authors)
+    def commits(path, start_ref, end_ref, authors)
       author_args = authors.map { |author| "--author=#{author}" }.join(' ')
 
-      Dir.chdir(@root_path) do
+      Dir.chdir(path) do
         `git log --format=%H #{start_ref}..#{end_ref} #{author_args}`.split
       end
     end
 
-    def commit_submodules_changed(sha)
-      Dir.chdir(@root_path) do
-        output = `git show #{sha}`
-        output.scan(%r{
-        \+\+\+\ b\/([^\n]+)\n
-@@\ -1\ \+1\ @@\n
--Subproject\ commit\ ([a-f0-9]{40})\n
-\+Subproject\ commit\ ([a-f0-9]{40})
-}mx)
-      end
-    end
-
-    def submodule_commit_messages(root_sha, path, submodule_prev_sha,
-                                  submodule_new_sha)
-      Dir.chdir(@root_path) do
-        `git checkout #{root_sha}`
-        `git submodule update --init --recursive`
-        Dir.chdir(path) do
-          `git log #{submodule_prev_sha}..#{submodule_new_sha}`
-        end
-      end
-    end
-
-    def commit_message(sha)
-      Dir.chdir(@root_path) do
+    def commit_message(path, sha)
+      Dir.chdir(path) do
         `git log #{sha} --format=%B -n 1`
+      end
+    end
+
+    def submodule_commit_sha(root_tag, submodule_shas)
+      `git checkout #{root_tag}`
+      `git submodule update --init`
+
+      submodule_status = `git submodule status`
+      submodule_status.each_line do |line|
+        sub_pair = line.split
+
+        submodule = sub_pair[1]
+        sha = sub_pair[0]
+
+        if submodule_shas.has_key?(submodule)
+          submodule_shas[submodule] << sha
+        else
+          submodule_shas[submodule] = [sha]
+        end
       end
     end
 
     private
 
-    def submodule_commit_stories(root_sha)
+    def submodule_commit_stories(start_ref, end_ref, authors)
       story_map = GitRepoChangelog::StoryMap.new
       story_id_extractor = GitRepoChangelog::StoryIdExtractor.new
 
-      submodule_commits = commit_submodules_changed(root_sha)
-      submodule_commits.each do |path, prev_sha, new_sha|
-        message = submodule_commit_messages(root_sha, path, prev_sha, new_sha)
-        story_ids = story_id_extractor.story_ids(message)
-        story_map.add(path, story_ids)
+      submodule_shas = {}
+
+      Dir.chdir(@root_path) do
+        [start_ref, end_ref].each do |ref|
+          submodule_commit_sha(ref, submodule_shas)
+        end
+      end
+
+      submodule_shas.each_key do |submodule_name|
+        Dir.chdir(@root_path) do
+            sub_commits = commits(submodule_name, submodule_shas[submodule_name][0], submodule_shas[submodule_name][1], authors)
+
+            sub_commits.each do |sub_sha|
+              message = commit_message(submodule_name, sub_sha)
+              story_ids = story_id_extractor.story_ids(message)
+              story_map.add(submodule_name, story_ids)
+            end
+        end
       end
 
       story_map
