@@ -8,5 +8,12 @@ describe GitRepoChangelog::StoryIdExtractor do
                "Short message\n\nLong Message\n\n[#12345] [#67890]")).to eq(
                  %w(12345 67890))
     end
+
+    it 'extracts the story id with finishes' do
+      story_id_extractor = GitRepoChangelog::StoryIdExtractor.new
+      expect(story_id_extractor.story_ids(
+               "Short message\n\nLong Message\n\n[finishes #12345] [Fi #67890]")).to eq(
+                 %w(12345 67890))
+    end
   end
 end
