@@ -51,7 +51,7 @@ module GitRepoChangelog
         submodule = sub_pair[1]
         sha = sub_pair[0]
 
-        if submodule_shas.has_key?(submodule)
+        if submodule_shas.key?(submodule)
           submodule_shas[submodule] << sha
         else
           submodule_shas[submodule] = [sha]
@@ -61,10 +61,21 @@ module GitRepoChangelog
 
     private
 
-    def submodule_commit_stories(start_ref, end_ref, authors)
+    def generate_story_map_for_submodule(sub_commits, submodule_name)
       story_map = GitRepoChangelog::StoryMap.new
       story_id_extractor = GitRepoChangelog::StoryIdExtractor.new
 
+      sub_commits.each do |sub_sha|
+        message = commit_message(submodule_name, sub_sha)
+        story_ids = story_id_extractor.story_ids(message)
+        story_map.add(submodule_name, story_ids)
+      end
+
+      story_map
+    end
+
+    def submodule_commit_stories(start_ref, end_ref, authors)
+      story_map = GitRepoChangelog::StoryMap.new
       submodule_shas = {}
 
       Dir.chdir(@root_path) do
@@ -75,13 +86,8 @@ module GitRepoChangelog
 
       submodule_shas.each_key do |submodule_name|
         Dir.chdir(@root_path) do
-            sub_commits = commits(submodule_name, submodule_shas[submodule_name][0], submodule_shas[submodule_name][1], authors)
-
-            sub_commits.each do |sub_sha|
-              message = commit_message(submodule_name, sub_sha)
-              story_ids = story_id_extractor.story_ids(message)
-              story_map.add(submodule_name, story_ids)
-            end
+          sub_commits = commits(submodule_name, submodule_shas[submodule_name][0], submodule_shas[submodule_name][1], authors)
+          story_map.merge(generate_story_map_for_submodule(sub_commits, submodule_name))
         end
       end
 
