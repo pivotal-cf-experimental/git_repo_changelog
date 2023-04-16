@@ -32,7 +32,7 @@ GEM
     public_suffix (4.0.6)
     rainbow (2.2.2)
       rake
-    rake (10.4.2)
+    rake (12.3.3)
     representable (3.0.4)
       declarative (< 0.1.0)
       declarative-option (< 0.2.0)
@@ -78,7 +78,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  rake (~> 10.4.2)
+  rake (~> 12.3.3)
   rspec (~> 3.3.0)
   rubocop (~> 0.32.1)
   tracker_api (~> 0.2.10)
